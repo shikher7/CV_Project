@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Accessible Reservation Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            text-align: center;
+        }
+
+        .input-field, .option-button, .submit-button, .reset-button {
+            font-size: 24px;
+            padding: 20px;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .option-button, .submit-button, .reset-button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+
+        .option-button.selected {
+            background-color: #0000FF; /* Blue */
+        }
+
+        .submit-button:hover, .reset-button:hover {
+            background-color: #45a049;
+        }
+
+        #response {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .button-container .option-button {
+            width: 30%;
+        }
+
+        #form-container {
+            display: block;
+        }
+
+        #success-message {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="form-container">
+        <h1>Accessible Restaurant Reservation Form</h1>
+        <input type="text" class="input-field" id="name" placeholder="Your name">
+        <input type="email" class="input-field" id="email" placeholder="Your email">
+
+        <h2>Reservation Date</h2>
+        <div id="date-container" class="button-container">
+            <button class="option-button" onclick="selectDate('Today', this)">Today</button>
+            <button class="option-button" onclick="selectDate('Tomorrow', this)">Tomorrow</button>
+            <button class="option-button" onclick="selectDate('Day After Tomorrow', this)">Day After Tomorrow</button>
+        </div>
+
+        <h2>Number of People</h2>
+        <div id="people-container" class="button-container">
+            <button class="option-button" onclick="selectPeople('1', this)">1</button>
+            <button class="option-button" onclick="selectPeople('2', this)">2</button>
+            <button class="option-button" onclick="selectPeople('3', this)">3</button>
+        </div>
+
+        <h2>Any special request?</h2>
+        <div id="request-container" class="button-container">
+            <button class="option-button" onclick="selectRequest('Vegetarian', this)">Vegetarian</button>
+            <button class="option-button" onclick="selectRequest('Vegan', this)">Vegan</button>
+            <button class="option-button" onclick="selectRequest('Gluten-free', this)">Gluten-free</button>
+        </div>
+
+        <button class="submit-button" id="submit-button">Submit</button>
+        <button class="reset-button" id="reset-button">Reset</button>
+        <p id="response"></p>
+    </div>
+
+    <div class="container" id="success-message">
+        <h1>Thank You for Your Reservation!</h1>
+        <p id="summary"></p>
+        <button class="submit-button" onclick="editForm()">Edit Reservation</button>
+    </div>
+
+    <script>
+        let selectedDate, selectedPeople, selectedRequest;
+
+        function selectDate(date, elem) {
+            selectedDate = date;
+            updateSelected(elem, 'date-container');
+        }
+
+        function selectPeople(people, elem) {
+            selectedPeople = people;
+            updateSelected(elem, 'people-container');
+        }
+
+        function selectRequest(request, elem) {
+            selectedRequest = request;
+            updateSelected(elem, 'request-container');
+        }
+
+        function updateSelected(selectedElem, containerId) {
+            let container = document.getElementById(containerId);
+            let buttons = container.getElementsByClassName('option-button');
+
+            for(let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('selected');
+            }
+
+            selectedElem.classList.add('selected');
+        }
+
+        document.getElementById('submit-button').onclick = function() {
+            let name = document.getElementById('name').value;
+            let email = document.getElementById('email').value;
+
+            if(name && email && selectedDate && selectedPeople && selectedRequest) {
+                document.getElementById('summary').textContent = `Name: ${name}, Email: ${email}, Date: ${selectedDate}, People: ${selectedPeople}, Request: ${selectedRequest}`;
+                document.getElementById('form-container').style.display = 'none';
+                document.getElementById('success-message').style.display = 'block';
+            } else {
+                document.getElementById('response').textContent = "Please fill in all fields.";
+            }
+        }
+
+        document.getElementById('reset-button').onclick = function() {
+            clearForm();
+            document.getElementById('response').textContent = "Form has been reset.";
+        }
+
+        function editForm() {
+            document.getElementById('form-container').style.display = 'block';
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function clearForm() {
+            document.getElementById('name').value = "";
+            document.getElementById('email').value = "";
+            let buttons = document.getElementsByClassName('option-button');
+
+            for(let i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('selected');
+            }
+
+            selectedDate = null;
+            selectedPeople = null;
+            selectedRequest = null;
+        }
+    </script>
+</body>
+</html>
