@@ -66,7 +66,7 @@ with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence
         if not ret:
             break
         height, width, _ = frame.shape
-        frame = cv2.flip(frame, 1)
+        # frame = cv2.flip(frame, 1)
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         rgb_image.flags.writeable = False
         results = face_mesh.process(rgb_image)
@@ -83,6 +83,7 @@ with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence
                 leftEAR = eye_aspect_ratio(leftEye)
                 rightEAR = eye_aspect_ratio(rightEye)
                 ear = (leftEAR + rightEAR) / 2.0
+                print(ear)
                 leftEyeDistance = eye_open_close_distance(leftEye)
                 rightEyeDistance = eye_open_close_distance(rightEye)
                 distance = (leftEyeDistance + rightEyeDistance) / 2.0
@@ -113,7 +114,7 @@ with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence
                     COUNTER_LEFT = 0
                     COUNTER_RIGHT = 0
                     COUNTER_BOTH = 0
-                print(calibrated)
+                # print(calibrated)
                 if calibrated:
                     current_point = (int(nose_tip.x * width), int(nose_tip.y * height))
                     move_x = (current_point[0] - calibration_point[0]) * SCALE_FACTOR

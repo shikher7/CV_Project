@@ -38,7 +38,6 @@ async def send_receive():
         session_begins = await _ws.recv()
         print(session_begins)
         print("Sending messages ...")
-
         async def send():
             while True:
                 try:
@@ -66,9 +65,6 @@ async def send_receive():
                     break
                 except Exception:
                     logging.exception('Not a websocket')
-
-
-
         send_result, receive_result, webcam_result = await asyncio.gather(send(), receive())
 
 asyncio.run(send_receive())

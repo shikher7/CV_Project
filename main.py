@@ -1,6 +1,5 @@
 import cv2
 import mediapipe as mp
-import numpy as np
 from pynput.mouse import Controller, Button
 from screeninfo import get_monitors
 from cvzone.FaceMeshModule import FaceMeshDetector
@@ -19,7 +18,11 @@ counter = 0
 color = (255, 0, 255)
 idList = [22, 23, 24, 26, 110, 157, 158, 159, 160, 161, 130, 243]
 ratioList = []
-
+rightIdList = [263, 249, 390, 373, 374, 380, 381, 382, 362,466, 388, 387, 386, 385, 384, 398]
+rightRatioList = []
+rightBlinkCounter = 0
+rightCounter = 0
+rightColor = (255, 0, 255)
 def draw_rectangle(event, x, y, flags, param):
     global box_clicked
     if event == cv2.EVENT_LBUTTONUP:
@@ -59,11 +62,18 @@ with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence
             face = faces[0]
             for id in idList:
                 cv2.circle(annotated_image, face[id], 5, color, cv2.FILLED)
-
+            for id in rightIdList:  # right eye
+                cv2.circle(annotated_image, face[id], 5, rightColor, cv2.FILLED)
             leftUp = face[159]
             leftDown = face[23]
             leftLeft = face[130]
             leftRight = face[243]
+
+            rightUp = face[386]
+            rightDown = face[253]
+            rightLeft = face[463]
+            rightRight = face[359]
+
             lenghtVer, _ = detector.findDistance(leftUp, leftDown)
             lenghtHor, _ = detector.findDistance(leftLeft, leftRight)
 
@@ -90,9 +100,36 @@ with mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence
 
             cv2.putText(annotated_image, f'Blink Count: {blinkCounter}', (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
+            lenghtVerRight, _ = detector.findDistance(rightUp, rightDown)
+            lenghtHorRight, _ = detector.findDistance(rightLeft, rightRight)
+
+            cv2.line(annotated_image, rightUp, rightDown, (0, 200, 0), 3)
+            cv2.line(annotated_image, rightLeft, rightRight, (0, 200, 0), 3)
+
+            rightRatio = int((lenghtVerRight / lenghtHorRight) * 100)
+            rightRatioList.append(rightRatio)
+            if len(rightRatioList) > 3:
+                rightRatioList.pop(0)
+            rightRatioAvg = sum(rightRatioList) / len(rightRatioList)
+
+            if rightRatioAvg < 35 and rightCounter == 0:
+                rightBlinkCounter += 1
+                rightColor = (0, 200, 0)
+                rightCounter = 1
+                # Added mouse click
+                mouse.click(Button.left, 1)
+            if rightCounter != 0:
+                rightCounter += 1
+                if rightCounter > 10:
+                    rightCounter = 0
+                    rightColor = (255, 0, 255)
+
+            cv2.putText(annotated_image, f'Right Blink Count: {rightBlinkCounter}', (50, 150), cv2.FONT_HERSHEY_SIMPLEX,
+                        1, rightColor, 2)
+
         if results.multi_face_landmarks:
             for face_landmarks in results.multi_face_landmarks:
-                mp_drawing.draw_landmarks(annotated_image, face_landmarks, mp_face_mesh.FACEMESH_CONTOURS)
+                mp_drawing.draw_landmarks(annotated_image, face_landmarks, mp_face_mesh.FACEMESH_TESSELATION)
                 nose_tip = face_landmarks.landmark[4]
 
                 if calibrated:
