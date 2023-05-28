@@ -5,6 +5,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #F4F4F4;
         }
 
         .container {
@@ -21,7 +22,7 @@
         }
 
         .option-button, .submit-button, .reset-button {
-            background-color: #4CAF50; /* Green */
+            background-color: #3498DB; /* Blue */
             border: none;
             color: white;
             text-align: center;
@@ -31,12 +32,12 @@
             border-radius: 12px;
         }
 
-        .option-button.selected {
-            background-color: #0000FF; /* Blue */
+         .option-button.selected {
+            background-color: #2ECC71; /* Green */
         }
 
         .submit-button:hover, .reset-button:hover {
-            background-color: #45a049;
+            background-color: #2980B9;
         }
 
         #response {
@@ -66,7 +67,7 @@
 <body>
     <div class="container" id="form-container">
         <h1>Accessible Restaurant Reservation Form</h1>
-        <input type="text" class="input-field" id="name" placeholder="Your name">
+        <input type="text" class="input-field" id="name" placeholder="Your name" value="{{ name }}">
         <input type="tel" class="input-field" id="phone" placeholder="Your phone number">
 
         <h2>Reservation Date</h2>

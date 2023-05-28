@@ -17,20 +17,16 @@ class GestureControllerApplication:
         self.calibration_point = (0, 0)
         self.prev_wrist_y = None
 
-
     def initialize(self):
         self.mouse.position = (self.monitor.width / 2, self.monitor.height / 2)
         self.calibrated = True
-
         cv2.namedWindow("Frame")
         cv2.setMouseCallback("Frame", self.draw_rectangle)
-
         self.cap = cv2.VideoCapture(0)
 
     def draw_rectangle(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONUP and 100 < x < 200 and 100 < y < 200:
             self.box_clicked = True
-
     def run(self):
         with self.mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as face_mesh, \
              self.mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
@@ -74,7 +70,7 @@ class GestureControllerApplication:
 
     def annotate_image(self, rgb_image, face_mesh_results, hand_landmarks, width, height):
         annotated_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2BGR)
-        if face_mesh_results.multi_face_landmarks:
+        if face_mesh_results.multi_face_landmarks and hand_landmarks.multi_hand_landmarks:  # check for hand landmarks here
             for face_landmarks in face_mesh_results.multi_face_landmarks:
                 self.mp_drawing.draw_landmarks(annotated_image, face_landmarks, self.mp_face_mesh.FACEMESH_TESSELATION)
                 nose_tip = face_landmarks.landmark[4]
@@ -95,6 +91,9 @@ class GestureControllerApplication:
 
     def perform_mouse_click_and_scroll(self, hand_landmark):
         thumb_tip = hand_landmark.landmark[self.mp_hands.HandLandmark.THUMB_TIP]
+        index_finger_mcp = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_MCP]
+        index_finger_pip = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_PIP]
+        index_finger_dip = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_DIP]
         index_finger_tip = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_TIP]
         wrist = hand_landmark.landmark[self.mp_hands.HandLandmark.WRIST]
 
@@ -106,13 +105,13 @@ class GestureControllerApplication:
             self.mouse.click(Button.left, 1)
 
         # scrolling action
-        # if self.prev_wrist_y is not None:
-        #     if wrist.y > self.prev_wrist_y + 0.01:  # swipe down gesture
-        #         self.scroll_down()
-        #     elif wrist.y < self.prev_wrist_y - 0.01:  # swipe up gesture
-        #         self.scroll_up()
-        #
-        # self.prev_wrist_y = wrist.y
+        # Check if index finger is pointing straight
+        if index_finger_mcp.y > index_finger_pip.y > index_finger_dip.y > index_finger_tip.y:
+            # Index finger is pointing upwards
+            self.scroll_up()
+        elif index_finger_mcp.y < index_finger_pip.y < index_finger_dip.y < index_finger_tip.y:
+            # Index finger is pointing downwards
+            self.scroll_down()
 
     def scroll_up(self):
         self.mouse.scroll(0, 1)

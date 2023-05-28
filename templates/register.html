@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #2C3E50;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        color: #444;
+    }
+    form {
+        background-color: #ECF0F1;
+        max-width: 500px;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #2C3E50;
+    }
+    label {
+        display: block;
+        margin: 25px 0 10px;
+        font-weight: bold;
+    }
+    input[type="text"], input[type="email"], input[type="password"] {
+        width: 100%;
+        padding: 15px;
+        border: 1px solid #BDC3C7;
+        border-radius: 5px;
+        box-sizing: border-box; /* Make the padding included in the total width */
+    }
+    input[type="submit"] {
+        margin-top: 30px;
+        padding: 15px 20px;
+        border: none;
+        color: white;
+        background-color: #3498DB;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+    input[type="submit"]:hover {
+        background-color: #2980B9;
+    }
+    </style>
+</head>
+<body>
+    <form method="POST">
+        <h2>Register for Accessible Reservation</h2>
+        <label for="name">Full Name:</label>
+        <input type="text" id="name" name="name" required placeholder="Enter your full name">
+        <label for="email">Email Address:</label>
+        <input type="email" id="email" name="email" required placeholder="Enter your email">
+        <label for="phone">Phone Number:</label>
+        <input type="text" id="phone" name="phone" required placeholder="Enter your phone number">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required placeholder="Create a password">
+        <input type="submit" value="Register">
+    </form>
+</body>
+</html>
