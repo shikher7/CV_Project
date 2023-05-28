@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 from pynput.mouse import Controller, Button
 from screeninfo import get_monitors
+from face_trainer import train
 
 
 class GestureControllerApplication:
@@ -9,6 +10,8 @@ class GestureControllerApplication:
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_face_mesh = mp.solutions.face_mesh
         self.mp_hands = mp.solutions.hands
+        self.face_detector = cv2.CascadeClassifier('config/haarcascade_frontalface_default.xml')
+        self.dataset = 'dataset/'
         self.mouse = Controller()
         self.monitor = get_monitors()[0]
         self.scale_factor = 10
@@ -27,6 +30,33 @@ class GestureControllerApplication:
 
         self.cap = cv2.VideoCapture(0)
 
+
+    def face_dataset(self):
+        face_id = input('\n enter user id end press <return> ==>  ')
+        print("\n [INFO] Initializing face capture. Look the camera and wait ...")
+        count = 0
+
+        while count < 30:
+
+            ret, frame = self.cap.read()
+            # frame = cv2.flip(frame, -1)  # flip video image vertically
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = self.face_detector.detectMultiScale(gray, 1.3, 5)
+
+            for (x, y, w, h) in faces:
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                count += 1
+
+                # Save the captured image into the datasets folder
+                cv2.imwrite(self.dataset+"User." + str(face_id) + '.' + str(count) + ".jpg", gray[y:y + h, x:x + w])
+
+            k = cv2.waitKey(100) & 0xff  # Press 'ESC' for exiting video
+            if k == 27:
+                break
+            elif count >= 30:  # Take 30 face sample and stop video
+                break
+
+
     def draw_rectangle(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONUP and 100 < x < 200 and 100 < y < 200:
             self.box_clicked = True
@@ -36,12 +66,14 @@ class GestureControllerApplication:
              self.mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
             while self.cap.isOpened():
                 ret, frame = self.cap.read()
-                if not ret: break
+                if not ret:
+                    break
 
                 frame = self.process_frame(frame, face_mesh, hands)
                 self.display_frame(frame)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'): break
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
         self.cap.release()
         cv2.destroyAllWindows()
@@ -127,4 +159,8 @@ class GestureControllerApplication:
 if __name__ == "__main__":
     app = GestureControllerApplication()
     app.initialize()
+
+    # app.face_dataset()
+    # train('dataset', 'trainer/')
+
     app.run()

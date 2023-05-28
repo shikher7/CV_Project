@@ -1,12 +1,8 @@
-''''
+"""'
 Real Time Face Recogition
-	==> Each face stored on dataset/ dir, should have a unique numeric integer ID as 1, 2, 3, etc
-	==> LBPH computed model (trained faces) should be on trainer/ dir
-Based on original code by Anirban Kar: https://github.com/thecodacus/Face-Recognition
-
-Developed by Marcelo Rovai - MJRoBot.org @ 21Feb18
-
-'''
+==> Each face stored on dataset/ dir, should have a unique numeric integer ID as 1, 2, 3, etc
+==> LBPH computed model (trained faces) should be on trainer/ dir
+"""
 
 import cv2
 import numpy as np
@@ -14,7 +10,7 @@ import os
 
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.read('trainer/trainer.yml')
-cascadePath = "haarcascade_frontalface_default.xml"
+cascadePath = "config/haarcascade_frontalface_default.xml"
 faceCascade = cv2.CascadeClassifier(cascadePath);
 
 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -35,9 +31,8 @@ minW = 0.1 * cam.get(3)
 minH = 0.1 * cam.get(4)
 
 while True:
-
     ret, img = cam.read()
-    img = cv2.flip(img, -1)  # Flip vertically
+    # img = cv2.flip(img, -1)  # Flip vertically
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 

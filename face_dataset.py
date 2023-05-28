@@ -1,11 +1,8 @@
-'''
+"""
 Capture multiple Faces from multiple users to be stored on a DataBase (dataset directory)
-	==> Faces will be stored on a directory: dataset/ (if does not exist, pls create one)
-	==> Each face will have a unique numeric integer ID as 1, 2, 3, etc
-
-Developed by Marcelo Rovai - MJRoBot.org @ 21Feb18
-
-'''
+==> Faces will be stored on a directory: dataset/
+==> Each face will have a unique numeric integer ID as 1, 2, 3, etc
+"""
 
 import cv2
 import os
@@ -14,7 +11,7 @@ cam = cv2.VideoCapture(0)
 cam.set(3, 640) # set video width
 cam.set(4, 480) # set video height
 
-face_detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+face_detector = cv2.CascadeClassifier('config/haarcascade_frontalface_default.xml')
 
 # For each person, enter one numeric face id
 face_id = input('\n enter user id end press <return> ==>  ')
