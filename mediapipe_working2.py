@@ -12,6 +12,7 @@ class GestureControllerApplication:
         self.mp_hands = mp.solutions.hands
         self.face_detector = cv2.CascadeClassifier('config/haarcascade_frontalface_default.xml')
         self.dataset = 'dataset/'
+        self.trainer = 'trainer/'
         self.mouse = Controller()
         self.monitor = get_monitors()[0]
         self.scale_factor = 10
@@ -26,6 +27,10 @@ class GestureControllerApplication:
         cv2.namedWindow("Frame")
         cv2.setMouseCallback("Frame", self.draw_rectangle)
         self.cap = cv2.VideoCapture(0)
+
+        # set video height and width
+        self.cap .set(3, 640)  # set video width
+        self.cap .set(4, 480)  # set video height
 
 
     def face_dataset(self):
@@ -54,22 +59,72 @@ class GestureControllerApplication:
                 break
 
 
+    def face_recognize(self, frame):
+        recognizer = cv2.face.LBPHFaceRecognizer_create()
+        recognizer.read(self.trainer+'trainer.yml')
+        face_cascade = self.face_detector
+
+        id = 0
+        confidence = 0
+        names = ['None', 'Aparna', 'Paula', 'Ilza', 'Z', 'W']
+        min_w = 0.1 * self.cap.get(3)
+        min_h = 0.1 * self.cap.get(4)
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(
+            gray,
+            scaleFactor=1.2,
+            minNeighbors=5,
+            minSize=(int(min_w), int(min_h)),
+        )
+
+        for (x, y, w, h) in faces:
+
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+            id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
+
+            # Check if confidence is less them 100 ==> "0" is perfect match
+            if (confidence < 100):
+                id = names[id]
+                confidence = "  {0}%".format(round(100 - confidence))
+            else:
+                id = "unknown"
+                confidence = "  {0}%".format(round(100 - confidence))
+
+        return id, confidence
+
+
     def draw_rectangle(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONUP and 100 < x < 200 and 100 < y < 200:
             self.box_clicked = True
     def run(self):
+        recognized = False
         with self.mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as face_mesh, \
              self.mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
             while self.cap.isOpened():
+
                 ret, frame = self.cap.read()
                 if not ret:
                     break
 
-                frame = self.process_frame(frame, face_mesh, hands)
-                self.display_frame(frame)
+                print(ret, recognized)
 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                if ret < 10 and recognized is False:
+                    # call recognizer with frame
+                    name, confidence = self.face_recognize(frame)
+                    print(f"name {name} confidence{confidence}")
+                    # recognized = True
+                elif ret >=10 and recognized is False:
+                    exit(1)
+                    #display
+                else:
+
+                    frame = self.process_frame(frame, face_mesh, hands)
+                    self.display_frame(frame)
+
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
 
         self.cap.release()
         cv2.destroyAllWindows()
