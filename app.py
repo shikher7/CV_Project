@@ -4,6 +4,8 @@ from face_trainer import FaceTrainer
 from face_recognizer import FaceRecognizer
 import os
 import json
+import subprocess
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # replace with your secret key
@@ -35,7 +37,9 @@ def face_login():
 @app.route('/form', methods=['GET', 'POST'])
 def form():
     if 'user' in session:
+        subprocess.Popen(["python", "main.py"])  # runs main.py as a background process
         return render_template('form.html', name=session['name'])
+
 
 
 @app.route('/', methods=['GET'])
