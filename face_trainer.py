@@ -1,47 +1,43 @@
-"""
-Training Multiple Faces stored on a DataBase:
-==> Each face should have a unique numeric integer ID as 1, 2, 3, etc
-==> LBPH computed model will be saved on trainer/ directory. (if it does not exist, pls create one)
-==> for using PIL, install pillow library with "pip install pillow"
-"""
-
 import cv2
 import numpy as np
 from PIL import Image
 import os
 
-# function to get the images and label data
-def getImagesAndLabels(path):
+dataset_path = 'dataset/'
+trainer_path = 'trainer/'
+class FaceTrainer:
+    def __init__(self, path, output):
+        self.path = path
+        self.output = output
+        self.id = None
+        self.confidence = None
 
-    detector = cv2.CascadeClassifier("config/haarcascade_frontalface_default.xml")
+    @staticmethod
+    def getImagesAndLabels(path):
+        detector = cv2.CascadeClassifier("config/haarcascade_frontalface_default.xml")
+        faceSamples = []
+        ids = []
 
-    imagePaths = [os.path.join(path,f) for f in os.listdir(path)]
-    faceSamples=[]
-    ids = []
+        for dir_name in os.listdir(path):  # iterate through each folder named as '0', '1', '2', etc.
+            dir_path = os.path.join(path, dir_name)
+            if os.path.isdir(dir_path):
+                imagePaths = [os.path.join(dir_path, f) for f in os.listdir(dir_path) if f.endswith('.jpg')]
+                for imagePath in imagePaths:
+                    PIL_img = Image.open(imagePath).convert('L')
+                    img_numpy = np.array(PIL_img, 'uint8')
+                    id = os.path.split(imagePath)[-1].split(".")[1]
+                    faces = detector.detectMultiScale(img_numpy)
+                    for (x, y, w, h) in faces:
+                        faceSamples.append(img_numpy[y:y + h, x:x + w])
+                        ids.append(int(dir_name))  # here we're storing the id as the folder name
+        return faceSamples, ids
 
-    for imagePath in imagePaths:
+    def train(self):
+        print("\n [INFO] Training faces. It will take a few seconds. Wait ...")
+        recognizer1 = cv2.face.LBPHFaceRecognizer_create()
+        faces, ids = self.getImagesAndLabels(self.path)
+        recognizer1.train(faces, np.array(ids))
+        recognizer1.write(self.output + 'trainer.yml')
+        print("\n [INFO] {0} faces trained. Exiting Program".format(len(np.unique(ids))))
 
-        PIL_img = Image.open(imagePath).convert('L') # convert it to grayscale
-        img_numpy = np.array(PIL_img,'uint8')
 
-        id = int(os.path.split(imagePath)[-1].split(".")[1])
-        faces = detector.detectMultiScale(img_numpy)
-
-        for (x,y,w,h) in faces:
-            faceSamples.append(img_numpy[y:y+h,x:x+w])
-            ids.append(id)
-
-    return faceSamples, ids
-
-def train(path, output):
-    print ("\n [INFO] Training faces. It will take a few seconds. Wait ...")
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
-
-    faces, ids = getImagesAndLabels(path)
-    recognizer.train(faces, np.array(ids))
-
-    # Save the model into trainer/trainer.yml
-    recognizer.write(output+'trainer.yml')
-
-    # Print the numer of faces trained and end program
-    print("\n [INFO] {0} faces trained. Exiting Program".format(len(np.unique(ids))))

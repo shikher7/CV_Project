@@ -1,72 +1,72 @@
-"""'
-Real Time Face Recogition
-==> Each face stored on dataset/ dir, should have a unique numeric integer ID as 1, 2, 3, etc
-==> LBPH computed model (trained faces) should be on trainer/ dir
-"""
-
 import cv2
-import numpy as np
-import os
+import multiprocessing
+import time
+import json
 
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-recognizer.read('trainer/trainer.yml')
-cascadePath = "config/haarcascade_frontalface_default.xml"
-faceCascade = cv2.CascadeClassifier(cascadePath);
+dataset_path = 'dataset/'
+trainer_path = 'trainer/'
 
-font = cv2.FONT_HERSHEY_SIMPLEX
+try:
+    with open('users_db.json', 'r') as f:
+        users_db = json.load(f)
+except FileNotFoundError:
+    users_db = {}  # If the file doesn't exist yet, start with an empty database
 
-# iniciate id counter
-id = 0
 
-# names related to ids: example ==> Marcelo: id=1,  etc
-names = ['None', 'Aparna', 'Paula', 'Ilza', 'Z', 'W']
+class FaceRecognizer:
+    VIDEO_WIDTH = 640
+    VIDEO_HEIGHT = 480
+    TIMEOUT = 3
+    ESC_KEY = 27
 
-# Initialize and start realtime video capture
-cam = cv2.VideoCapture(0)
-cam.set(3, 640)  # set video widht
-cam.set(4, 480)  # set video height
+    def __init__(self, trainer_path):
+        self.trainer_path = trainer_path
+        self.id = None  # set default value for id
+        self.confidence = 100  # set default value for confidence
 
-# Define min window size to be recognized as a face
-minW = 0.1 * cam.get(3)
-minH = 0.1 * cam.get(4)
+    def recognize_face(self):
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+        p = multiprocessing.Process(target=self._recognize_face, args=(return_dict,))
+        p.start()
+        p.join()
+        self.id, self.confidence = return_dict['id'], return_dict['confidence']
+        return self
+    def _recognize_face(self, return_dict):
+        recognizer = cv2.face.LBPHFaceRecognizer_create()
+        recognizer.read(self.trainer_path + 'trainer.yml')
 
-while True:
-    ret, img = cam.read()
-    # img = cv2.flip(img, -1)  # Flip vertically
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faceCascade = cv2.CascadeClassifier('config/haarcascade_frontalface_default.xml')
 
-    faces = faceCascade.detectMultiScale(
-        gray,
-        scaleFactor=1.2,
-        minNeighbors=5,
-        minSize=(int(minW), int(minH)),
-    )
+        cam = cv2.VideoCapture(0)
+        cam.set(3, self.VIDEO_WIDTH)  # set video width
+        cam.set(4, self.VIDEO_HEIGHT)  # set video height
+        minW = 0.1 * cam.get(3)
+        minH = 0.1 * cam.get(4)
+        start_time = time.time()
 
-    for (x, y, w, h) in faces:
-
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-        id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
-
-        # Check if confidence is less them 100 ==> "0" is perfect match
-        if (confidence < 100):
-            id = names[id]
-            confidence = "  {0}%".format(round(100 - confidence))
-        else:
-            id = "unknown"
-            confidence = "  {0}%".format(round(100 - confidence))
-
-        cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
-        cv2.putText(img, str(confidence), (x + 5, y + h - 5), font, 1, (255, 255, 0), 1)
-
-    cv2.imshow('camera', img)
-
-    k = cv2.waitKey(10) & 0xff  # Press 'ESC' for exiting video
-    if k == 27:
-        break
-
-# Do a bit of cleanup
-print("\n [INFO] Exiting Program and cleanup stuff")
-cam.release()
-cv2.destroyAllWindows()
+        while time.time() - start_time < self.TIMEOUT:
+            # print(f'recognizing face, elapsed time: {time.time() - start_time} secs')
+            ret, img = cam.read()
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = faceCascade.detectMultiScale(
+                gray,
+                scaleFactor=1.2,
+                minNeighbors=5,
+                minSize=(int(minW), int(minH)),
+            )
+            for (x, y, w, h) in faces:
+                id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
+                cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+                cv2.putText(img, str(users_db[str(id)]["name"]), (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                cv2.imshow('image', img)
+                print(confidence, id)
+                if confidence > 10 and id is not None:
+                    return_dict['id'], return_dict['confidence'] = id, confidence
+            if cv2.waitKey(100) & 0xff == self.ESC_KEY:
+                break
+        cam.release()
+        cv2.destroyAllWindows()
+        print(f'Face recognized with confidence ',return_dict['id'], return_dict['confidence'])
+        return

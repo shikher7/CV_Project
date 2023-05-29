@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Login</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <style>
     body {
         font-family: Arial, sans-serif;
@@ -18,8 +19,11 @@
         background-color: #ECF0F1;
         max-width: 500px;
         padding: 30px;
-        border-radius: 10px;
+        border-radius: 20px;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
     h2 {
         text-align: center;
@@ -31,37 +35,52 @@
         margin: 25px 0 10px;
         font-weight: bold;
     }
-    input[type="email"], input[type="password"] {
+    input[type="text"] {
         width: 100%;
         padding: 15px;
         border: 1px solid #BDC3C7;
-        border-radius: 5px;
+        border-radius: 50px;
         box-sizing: border-box;
     }
-    input[type="submit"] {
+    button[type="submit"], #face-login {
         margin-top: 30px;
         padding: 15px 20px;
         border: none;
         color: white;
         background-color: #3498DB;
         cursor: pointer;
-        border-radius: 5px;
+        border-radius: 50px;
         font-size: 18px;
         font-weight: bold;
+        display: block;
+        width: 100%;
     }
-    input[type="submit"]:hover {
+    button[type="submit"]:hover, #face-login:hover {
         background-color: #2980B9;
+    }
+    .register-btn {
+        margin-top: 15px;
+        text-align: center;
+    }
+    .register-btn a {
+        color: #3498DB;
+        text-decoration: underline;
+    }
+    .register-btn a:hover {
+        color: #2980B9;
     }
     </style>
 </head>
 <body>
-    <form method="POST">
+    <form method="POST" action="/face_login">
         <h2>Login to Accessible Reservation</h2>
-        <label for="email">Email Address:</label>
-        <input type="email" id="email" name="email" required placeholder="Enter your email">
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required placeholder="Enter your password">
-        <input type="submit" value="Login">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required placeholder="Enter your username">
+        <button type="submit" class="btn btn-primary">Face Login</button>
+        <div class="register-btn">
+            <small>Don't have an account?</small>
+            <a href="/register" class="btn btn-link">Register</a>
+        </div>
     </form>
 </body>
 </html>
