@@ -29,8 +29,8 @@ class GestureControllerApplication:
         self.cap = cv2.VideoCapture(0)
 
         # set video height and width
-        self.cap .set(3, 640)  # set video width
-        self.cap .set(4, 480)  # set video height
+        # self.cap.set(3, 640)  # set video width
+        # self.cap.set(4, 480)  # set video height
 
 
     def face_dataset(self):
@@ -63,9 +63,10 @@ class GestureControllerApplication:
         recognizer = cv2.face.LBPHFaceRecognizer_create()
         recognizer.read(self.trainer+'trainer.yml')
         face_cascade = self.face_detector
+        font = cv2.FONT_HERSHEY_SIMPLEX
 
         id = 0
-        confidence = 0
+        confidence = None
         names = ['None', 'Aparna', 'Paula', 'Ilza', 'Z', 'W']
         min_w = 0.1 * self.cap.get(3)
         min_h = 0.1 * self.cap.get(4)
@@ -89,7 +90,7 @@ class GestureControllerApplication:
                 id = names[id]
                 confidence = "  {0}%".format(round(100 - confidence))
             else:
-                id = "unknown"
+                id = None
                 confidence = "  {0}%".format(round(100 - confidence))
 
         return id, confidence
@@ -100,6 +101,8 @@ class GestureControllerApplication:
             self.box_clicked = True
     def run(self):
         recognized = False
+        name = confidence = None
+        idx = 1
         with self.mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as face_mesh, \
              self.mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
             while self.cap.isOpened():
@@ -108,23 +111,25 @@ class GestureControllerApplication:
                 if not ret:
                     break
 
-                print(ret, recognized)
-
-                if ret < 10 and recognized is False:
+                if idx < 10 and recognized is False:
                     # call recognizer with frame
                     name, confidence = self.face_recognize(frame)
-                    print(f"name {name} confidence{confidence}")
-                    # recognized = True
-                elif ret >=10 and recognized is False:
+                    if name is not None and confidence is not None:
+                        print(f"name {name} confidence{confidence}")
+                        recognized = True
+                elif idx >= 10 and recognized is False:
+                    print('Could not recognize')
                     exit(1)
                     #display
                 else:
-
                     frame = self.process_frame(frame, face_mesh, hands)
-                    self.display_frame(frame)
 
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                cv2.putText(frame, f"User: {name}  confidence: {confidence}", (700, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 0), 2)
+                self.display_frame(frame)
+
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                idx += 1
 
         self.cap.release()
         cv2.destroyAllWindows()
@@ -137,7 +142,7 @@ class GestureControllerApplication:
         hand_landmarks = self.get_hand_landmarks(rgb_image, hands)
         annotated_image = self.annotate_image(rgb_image, face_mesh_results, hand_landmarks, width, height)
 
-        cv2.rectangle(annotated_image, (100, 100), (200, 200), (255, 0, 0), 2)
+        # cv2.rectangle(annotated_image, (100, 100), (200, 200), (255, 0, 0), 2)
         if self.box_clicked:
             cv2.putText(annotated_image, "Clicked!", (100, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
