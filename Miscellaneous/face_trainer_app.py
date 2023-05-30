@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # fd = FaceDetector(face_id)
     # fd.capture_face()
 
-    path_to_images = 'dataset'
+    path_to_images = '../dataset'
     output_directory = 'trainer/'
     ft = FaceTrainer(path_to_images, output_directory)
     ft.train()

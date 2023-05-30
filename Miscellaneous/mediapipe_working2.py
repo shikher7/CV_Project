@@ -187,7 +187,6 @@ class GestureControllerApplication:
         index_finger_pip = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_PIP]
         index_finger_dip = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_DIP]
         index_finger_tip = hand_landmark.landmark[self.mp_hands.HandLandmark.INDEX_FINGER_TIP]
-        wrist = hand_landmark.landmark[self.mp_hands.HandLandmark.WRIST]
 
         # mouse click action
         distance = ((thumb_tip.x - index_finger_tip.x) ** 2 +
