@@ -24,12 +24,17 @@ except FileNotFoundError:
 def face_login():
     face_recognizer = FaceRecognizer(trainer_path)
     face_recognizer.recognize_face()
-    user_id, confidence = face_recognizer.id, face_recognizer.confidence
-
+    user_id, confidence = str(face_recognizer.id), face_recognizer.confidence
+    print(user_id, confidence)
+    for user_id in users_db:
+        print(user_id)
     # Check if the face is recognized with good confidence
     if confidence > 10:
-        session['user'] = session['name'] = users_db[str(user_id)]["name"]
-        return redirect(url_for('form'))
+        if user_id in users_db:
+            session['user'] = session['name'] = users_db[user_id]["name"]
+            return redirect(url_for('form'))
+        else:
+            return jsonify({'status': 'failure', 'message': 'User was not recognized.'})
     else:
         return jsonify({'status': 'failure', 'message': 'Face was not recognized.'})
 

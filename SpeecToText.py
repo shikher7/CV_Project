@@ -4,15 +4,14 @@ import asyncio
 import base64
 import json
 import logging
-import threading
-
+from pynput.keyboard import Controller
 class SpeechToText:
     FRAMES_PER_BUFFER = 3200
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 16000
     URL = "wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000"
-    AUTH_KEY = "key"  # Insert your AssemblyAI key here
+    AUTH_KEY = "fa26bc637ac94d7bbf5b0139a97a77a0"  # Insert your AssemblyAI key here
 
     def __init__(self):
         self.p = pyaudio.PyAudio()
@@ -25,7 +24,6 @@ class SpeechToText:
         self.buffered_text = []
         self.final_text = ""
         self.empty_count = 0  # Add this line
-
 
     def start_recording(self):
         self.is_speaking = True
@@ -43,6 +41,15 @@ class SpeechToText:
         self.is_speaking = False
         self.stream.stop_stream()
         self.stream.close()
+
+    def get_text(self):
+        return self.text
+
+    def reset(self):
+        self.text = ""
+        self.buffered_text = []
+        self.final_text = ""
+        self.empty_count = 0
 
     async def send_receive(self):
         print(f'Connecting websocket to url {self.URL}')
@@ -82,12 +89,9 @@ class SpeechToText:
                     self.final_text = result_json['text']
                     self.empty_count = 0
                 elif 'text' in result_json and result_json['text'] == "":
-                    # print(self.empty_count)
                     self.empty_count += 1
-                    if self.empty_count >= 5:
+                    if self.empty_count >= 2:
                         self.process_buffered_text()
-                        self.is_speaking = False
-                print(self.final_text)
             except websockets.exceptions.ConnectionClosedError as e:
                 logging.exception(f'Websocket closed {e.code}')
                 break
@@ -95,40 +99,10 @@ class SpeechToText:
                 logging.exception('Not a websocket')
 
     def process_buffered_text(self):
-        # This function processes buffered text
-        # For now, we only get the last result
         if self.buffered_text:
-            self.text = self.final_text
+            keyboard = Controller()
+            keyboard.type(self.final_text)  # type the final text into the current text field
+
             self.buffered_text = []
             self.final_text = ""
 
-    def transcribe(self):
-        return self.text
-
-def main():
-    speech_to_text = SpeechToText()
-    recording_thread = None
-
-    while True:
-        command = input("Enter a command (start, stop, print, quit): ")
-
-        if command == "start":
-            recording_thread = threading.Thread(target=speech_to_text.start_recording)
-            recording_thread.start()
-        elif command == "stop":
-            if recording_thread is not None:
-                speech_to_text.stop_recording()
-                recording_thread.join()
-                recording_thread = None
-        elif command == "print":
-            print(speech_to_text.transcribe())
-        elif command == "quit":
-            if recording_thread is not None:
-                speech_to_text.stop_recording()
-                recording_thread.join()
-            break
-        else:
-            print(f"Unknown command: {command}")
-
-if __name__ == "__main__":
-    main()

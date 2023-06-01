@@ -2,6 +2,12 @@ import cv2
 import mediapipe as mp
 from pynput.mouse import Controller, Button
 from screeninfo import get_monitors
+import time
+from threading import Thread
+from SpeecToText import SpeechToText
+VIDEO_WIDTH = 160
+VIDEO_HEIGHT = 120
+
 
 
 class GestureControllerApplication:
@@ -11,11 +17,15 @@ class GestureControllerApplication:
         self.mp_hands = mp.solutions.hands
         self.mouse = Controller()
         self.monitor = get_monitors()[0]
-        self.scale_factor = 10
+        self.scale_factor = 7
         self.box_clicked = False
         self.calibrated = False
         self.calibration_point = (0, 0)
         self.prev_wrist_y = None
+        self.smooth_factor = 0.9  # for smoothing the mouse movement
+        self.click_threshold = 0.15  # increase this threshold to reduce the sensitivity of click action
+        self.last_mouse_pos = None
+
 
     def initialize(self):
         self.mouse.position = (self.monitor.width / 2, self.monitor.height / 2)
@@ -23,11 +33,16 @@ class GestureControllerApplication:
         cv2.namedWindow("Frame")
         cv2.setMouseCallback("Frame", self.draw_rectangle)
         self.cap = cv2.VideoCapture(0)
+        self.cap.set(3, VIDEO_WIDTH)  # set video width
+        self.cap.set(4, VIDEO_HEIGHT)
+        # self.speech_to_text = SpeechToText()
 
     def draw_rectangle(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONUP and 100 < x < 200 and 100 < y < 200:
             self.box_clicked = True
     def run(self):
+        # thread = Thread(target=self.use_speech_to_text, args=(self.speech_to_text,))
+        # thread.start()
         with self.mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5) as face_mesh, \
              self.mp_hands.Hands(min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
             while self.cap.isOpened():
@@ -38,7 +53,7 @@ class GestureControllerApplication:
                 self.display_frame(frame)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
-
+        # thread.join()
         self.cap.release()
         cv2.destroyAllWindows()
 
@@ -77,10 +92,18 @@ class GestureControllerApplication:
 
                 if self.calibrated:
                     current_point = (int(nose_tip.x * width), int(nose_tip.y * height))
+                    if self.last_mouse_pos is None:
+                        self.last_mouse_pos = current_point
+                    else:
+                        current_point = (
+                            self.smooth_factor * self.last_mouse_pos[0] + (1 - self.smooth_factor) * current_point[0],
+                            self.smooth_factor * self.last_mouse_pos[1] + (1 - self.smooth_factor) * current_point[1]
+                        )
                     move_x = (current_point[0] - self.calibration_point[0]) * self.scale_factor
                     move_y = (current_point[1] - self.calibration_point[1]) * self.scale_factor
                     self.mouse.move(move_x, move_y)
                     self.calibration_point = current_point
+                    self.last_mouse_pos = current_point
 
         if hand_landmarks.multi_hand_landmarks:
             for hand_landmark in hand_landmarks.multi_hand_landmarks:
@@ -122,8 +145,23 @@ class GestureControllerApplication:
     def display_frame(self, frame):
         cv2.imshow('Frame', frame)
 
+    def use_speech_to_text(self, speech_to_text):
+        speech_to_text.start_recording()
+
+        time.sleep(10000)
+        speech_to_text.stop_recording()
+
+        text = speech_to_text.get_text()
+
+        print(text)
+
+        speech_to_text.reset()
+
 
 if __name__ == "__main__":
     app = GestureControllerApplication()
     app.initialize()
     app.run()
+
+ # Assuming your class is in a file named "speech_to_text.py"
+
